@@ -1,0 +1,68 @@
+Store procedure calls
+Method 1: Using Spring Data JPA (@Procedure)This is the cleanest and most common approach for standard procedures.1. Define the Stored Procedure in your EntityUse @NamedStoredProcedureQueries if your procedure returns data or has complex parameters.java@Entity
+@Table(name = "EMPLOYEES")
+@NamedStoredProcedureQuery(
+    name = "Employee.get_salary_grade",
+    procedureName = "GET_SALARY_GRADE",
+    parameters = {
+        @StoredProcedureParameter(mode = ParameterMode.IN, name = "emp_id", type = Long.class),
+        @StoredProcedureParameter(mode = ParameterMode.OUT, name = "salary_grade", type = String.class)
+    }
+)
+public class Employee {
+    @Id
+    private Long id;
+    // other fields, getters, setters
+}
+Use code with caution.2. Call it in your RepositoryReference the named query or map the procedure directly using the @Procedure annotation.java@Repository
+public interface EmployeeRepository extends JpaRepository<Employee, Long> {
+    
+    // Approach A: Using the Named Stored Procedure
+    @Procedure(name = "Employee.get_salary_grade")
+    String getSalaryGradeNamed(@Param("emp_id") Long empId);
+
+    // Approach B: Directly mapping by method name (must match procedure name in DB)
+    @Procedure(procedureName = "GET_SALARY_GRADE")
+    String getSalaryGradeDirect(@Param("emp_id") Long empId);
+}
+Method 2: Using EntityManager (Dynamic Calls)If you do not want to declare annotations on your entities, or if your parameters are dynamic, use the EntityManager.java@Service
+public class EmployeeService {
+
+    @Autowired
+    private EntityManager entityManager;
+
+    public String getSalaryGrade(Long empId) {
+        StoredProcedureQuery query = entityManager.createStoredProcedureQuery("GET_SALARY_GRADE");
+        
+        // Register parameters
+        query.registerStoredProcedureParameter("emp_id", Long.class, ParameterMode.IN);
+        query.registerStoredProcedureParameter("salary_grade", String.class, ParameterMode.OUT);
+        
+        // Set values and execute
+        query.setParameter("emp_id", empId);
+        query.execute();
+        
+        // Get output
+        return (String) query.getOutputParameterValue("salary_grade");
+    }
+Summary ChecklistTransaction Management: Always ensure your service layer has @Transactional enabled, as stored procedures often require an active transaction context.Case Sensitivity: Oracle is typically case-insensitive but defaults to uppercase. Ensure your procedureName strings match the database catalog exact casing (usually uppercase like "GET_SALARY_GRADE").Are you dealing with Oracle Cursor results (SYS_REFCURSOR), in-out parameters, or stored functions? Let me know and I can provide the specific syntax extension for it!
+}
+Method 3: Using SimpleJdbcCall (Best for Oracle Packages)If your stored procedures reside inside an Oracle Package, or you prefer plain JDBC without JPA overhead, use SimpleJdbcCall.java@Service
+public class LegacyDbService {
+
+    private final SimpleJdbcCall jdbcCall;
+
+    public LegacyDbService(DataSource dataSource) {
+        this.jdbcCall = new SimpleJdbcCall(dataSource)
+                .withCatalogName("EMP_PACKAGE") // Oracle Package Name
+                .withProcedureName("GET_SALARY_GRADE");
+    }
+
+    public String getSalaryGrade(Long empId) {
+        SqlParameterSource in = new MapSqlParameterSource().addValue("emp_id", empId);
+        Map<String, Object> out = jdbcCall.execute(in);
+        
+        return (String) out.get("salary_grade");
+    }
+}
+Summary ChecklistTransaction Management: Always ensure your service layer has @Transactional enabled, as stored procedures often require an active transaction context.Case Sensitivity: Oracle is typically case-insensitive but defaults to uppercase. Ensure your procedureNa
