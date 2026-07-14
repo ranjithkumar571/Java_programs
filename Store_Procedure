@@ -1,4 +1,4 @@
-Store procedure calls
+Store procedure calls:To call a stored procedure in Spring Boot, you have three primary methods depending on your needs: Spring Data JPA (@Procedure), EntityManager, or JdbcTemplate.Here is how to implement each approach.
 Method 1: Using Spring Data JPA (@Procedure)This is the cleanest and most common approach for standard procedures.1. Define the Stored Procedure in your EntityUse @NamedStoredProcedureQueries if your procedure returns data or has complex parameters.java@Entity
 @Table(name = "EMPLOYEES")
 @NamedStoredProcedureQuery(
