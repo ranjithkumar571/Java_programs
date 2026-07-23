@@ -4,7 +4,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
 import java.time.Duration;
 
-@Configuration
+'''@Configuration
 public class RestConfig {
 
     @Bean
@@ -14,7 +14,7 @@ public class RestConfig {
                 .setReadTimeout(Duration.ofSeconds(5))
                 .build();
     }
-}
+}'''
 Use code with caution.2. Inject and UseOnce configured, you can inject the RestTemplate bean using @Autowired or constructor injection into your services.GET RequestsgetForObject: Fast approach if you only need the raw un-wrapped response body mapped directly to a Java object.getForEntity: Best choice when you need the response body alongside metadata like HTTP status codes and headers.java@Service
 public class ApiService {
 
