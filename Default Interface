@@ -1,0 +1,19 @@
+# Default interface
+
+```interface Vehicle {
+    // Abstract method (must be implemented)
+    void startEngine();
+
+    // Default method (optional to override)
+    default void honk() {
+        System.out.println("Beep! Beep!");
+    }
+}
+
+class Car implements Vehicle {
+    @Override
+    public void startEngine() {
+        System.out.println("Car engine started.");
+    }
+    // honk() is inherited automatically!
+}```
